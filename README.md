@@ -4,15 +4,6 @@ A production-style RESTful E-Commerce Backend built using **FastAPI**, **Postgre
 
 ---
 
-## 📌 Project Status
-
-- ✅ Phase 1: Monolithic Backend
-- ✅ Phase 2: Redis Caching & Docker
-- ⏳ Phase 3: Microservices
-- ⏳ Phase 4: Kafka & Event-Driven Architecture
-
----
-
 # ✨ Features
 
 ## 🔐 Authentication & Authorization
