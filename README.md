@@ -1,4 +1,4 @@
-# 🚀 Scalable E-Commerce Backend API
+# 🚀 Zyvora — Scalable E-Commerce Backend
 
 A production-style RESTful E-Commerce Backend built using **FastAPI**, **PostgreSQL**, **Redis**, and **Docker**. The project follows a layered architecture and is designed with scalability in mind. It implements core backend engineering concepts such as authentication, authorization, database normalization, caching, pagination, and containerization.
 
