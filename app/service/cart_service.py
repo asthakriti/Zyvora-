@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.product import Product
 from app.models.cart import Cart, CartItem
 from app.schema.cart import AddToCartRequest
+from app.repositories import cart_repository
 
 
 def add_to_cart(
@@ -12,9 +13,10 @@ def add_to_cart(
     current_user: User,
     request: AddToCartRequest
 ):
-    product = db.query(Product).filter(
-        Product.id == request.product_id
-    ).first()
+    product = cart_repository.get_product_by_id(
+        db,
+        request.product_id
+    )
 
     if not product:
         raise HTTPException(
@@ -22,33 +24,32 @@ def add_to_cart(
             detail="Product not found"
         )
 
-    cart = db.query(Cart).filter(
-        Cart.user_id == current_user.id
-    ).first()
+    cart = cart_repository.get_cart_by_user_id(
+        db,
+        current_user.id
+    )
 
-    if not cart:
-        cart = Cart(user_id=current_user.id)
-        db.add(cart)
-        db.commit()
-        db.refresh(cart)
+    cart = cart_repository.create_cart(
+        db,
+        cart
+    )
 
-    cart_item = db.query(CartItem).filter(
-        CartItem.cart_id == cart.id,
-        CartItem.product_id == request.product_id
-    ).first()
+    cart_item = cart_repository.get_cart_item(
+        db,
+        cart.id,
+        request.product_id
+    )
 
     if cart_item:
         cart_item.quantity += request.quantity
+        cart_repository.update_cart_item(db, cart_item)
     else:
         cart_item = CartItem(
             cart_id=cart.id,
             product_id=request.product_id,
             quantity=request.quantity
         )
-        db.add(cart_item)
-
-    db.commit()
-    db.refresh(cart_item)
+        cart_item = cart_repository.create_cart_item(db, cart_item)
 
     return {
         "message": "Product added successfully",
@@ -60,10 +61,10 @@ def view_cart(
     db: Session,
     current_user: User
 ):
-    cart = db.query(Cart).filter(
-        Cart.user_id == current_user.id
-    ).first()
-
+    cart = cart_repository.get_cart_by_user_id(
+        db,
+        current_user.id
+    )
     if not cart:
         return {
             "message": "Cart is empty"
@@ -100,9 +101,10 @@ def update_quantity(
     item_id: int,
     request: AddToCartRequest
 ):
-    cart = db.query(Cart).filter(
-        Cart.user_id == current_user.id
-    ).first()
+    cart = cart_repository.get_cart_by_user_id(
+        db,
+        current_user.id
+    )
 
     if not cart:
         raise HTTPException(
@@ -110,10 +112,11 @@ def update_quantity(
             detail="Cart not found"
         )
 
-    cart_item = db.query(CartItem).filter(
-        CartItem.id == item_id,
-        CartItem.cart_id == cart.id
-    ).first()
+    cart_item = cart_repository.get_cart_item_by_id(
+        db,
+        cart.id,
+        item_id
+    )
 
     if not cart_item:
         raise HTTPException(
@@ -123,8 +126,10 @@ def update_quantity(
 
     cart_item.quantity = request.quantity
 
-    db.commit()
-    db.refresh(cart_item)
+    cart_item = cart_repository.update_cart_item(
+        db,
+        cart_item
+    )
 
     return {
         "message": "Quantity updated successfully"
@@ -136,9 +141,10 @@ def remove_item(
     current_user: User,
     item_id: int
 ):
-    cart = db.query(Cart).filter(
-        Cart.user_id == current_user.id
-    ).first()
+    cart = cart_repository.get_cart_by_user_id(
+        db,
+        current_user.id
+    )
 
     if not cart:
         raise HTTPException(
@@ -146,10 +152,11 @@ def remove_item(
             detail="Cart not found"
         )
 
-    cart_item = db.query(CartItem).filter(
-        CartItem.id == item_id,
-        CartItem.cart_id == cart.id
-    ).first()
+    cart_item = cart_repository.get_cart_item_by_id(
+        db,
+        cart.id,
+        item_id
+    )
 
     if not cart_item:
         raise HTTPException(
@@ -157,8 +164,10 @@ def remove_item(
             detail="Cart item not found"
         )
 
-    db.delete(cart_item)
-    db.commit()
+    cart_repository.delete_cart_item(
+        db,
+        cart_item
+    )
 
     return {
         "message": "Item removed successfully"
@@ -169,9 +178,10 @@ def clear_cart(
     db: Session,
     current_user: User
 ):
-    cart = db.query(Cart).filter(
-        Cart.user_id == current_user.id
-    ).first()
+    cart = cart_repository.get_cart_by_user_id(
+        db,
+        current_user.id
+    )
 
     if not cart:
         raise HTTPException(
@@ -179,11 +189,10 @@ def clear_cart(
             detail="Cart not found"
         )
 
-    db.query(CartItem).filter(
-        CartItem.cart_id == cart.id
-    ).delete()
-
-    db.commit()
+    cart_repository.clear_cart_items(
+        db,
+        cart.id
+    )
 
     return {
         "message": "Cart cleared successfully"

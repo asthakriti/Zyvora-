@@ -3,16 +3,16 @@ from sqlalchemy.orm import Session
 
 from app.models.category import Category
 from app.schema.category import CategoryCreate
+from app.repositories import category_repository
 
 
 def create_category(
     db: Session,
     category: CategoryCreate
 ):
-    existing_category = (
-        db.query(Category)
-        .filter(Category.name == category.name)
-        .first()
+    existing_category = category_repository.get_category_by_name(
+        db,
+        category.name
     )
 
     if existing_category:
@@ -25,9 +25,10 @@ def create_category(
         name=category.name
     )
 
-    db.add(new_category)
-    db.commit()
-    db.refresh(new_category)
+    new_category = category_repository.create_category(
+        db,
+        new_category
+    )
 
     return new_category
 
@@ -35,17 +36,15 @@ def create_category(
 def get_categories(
     db: Session
 ):
-    return db.query(Category).all()
-
+    return category_repository.get_all_categories(db)
 
 def get_category(
     db: Session,
     category_id: int
 ):
-    category = (
-        db.query(Category)
-        .filter(Category.id == category_id)
-        .first()
+    category = category_repository.get_category_by_id(
+        db,
+        category_id
     )
 
     if not category:
@@ -62,10 +61,9 @@ def update_category(
     category_id: int,
     category_data: CategoryCreate
 ):
-    category = (
-        db.query(Category)
-        .filter(Category.id == category_id)
-        .first()
+    category = category_repository.get_category_by_id(
+        db,
+        category_id
     )
 
     if not category:
@@ -74,10 +72,11 @@ def update_category(
             detail="Category not found"
         )
 
-    category.name = category_data.name
-
-    db.commit()
-    db.refresh(category)
+    category = category_repository.update_category(
+        db,
+        category,
+        category_data
+    )
 
     return category
 
@@ -86,10 +85,9 @@ def delete_category(
     db: Session,
     category_id: int
 ):
-    category = (
-        db.query(Category)
-        .filter(Category.id == category_id)
-        .first()
+    category = category_repository.get_category_by_id(
+        db,
+        category_id
     )
 
     if not category:
@@ -98,8 +96,10 @@ def delete_category(
             detail="Category not found"
         )
 
-    db.delete(category)
-    db.commit()
+    category_repository.delete_category(
+        db,
+        category
+    )
 
     return {
         "message": "Category deleted successfully"
@@ -110,10 +110,9 @@ def get_category_products(
     db: Session,
     category_id: int
 ):
-    category = (
-        db.query(Category)
-        .filter(Category.id == category_id)
-        .first()
+    category = category_repository.get_category_by_id(
+        db,
+        category_id
     )
 
     if not category:

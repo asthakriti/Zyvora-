@@ -10,6 +10,7 @@ from app.schema.product import ProductResponse
 
 from app.core.redis_client import redis_client
 from app.models.product import Product
+from app.repositories import product_repository
 
 #get list of product
 PRODUCTS_CACHE_KEY = "products:all"
@@ -31,9 +32,10 @@ def create_product(
         category_id=product.category_id
     )
 
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
+    new_product = product_repository.create_product(
+        db,
+        new_product
+    )
 
     try:
         redis_client.delete(PRODUCTS_CACHE_KEY)
@@ -60,7 +62,7 @@ def get_products(db: Session):
     except redis.RedisError as e:
         logger.error(f"Redis Error: {e}")
 
-    products = db.query(Product).all()
+    products = product_repository.get_all_products(db)
 
     #alchemySQL return object
     #before storing to the redis convert the object into json
@@ -100,9 +102,10 @@ def get_product(
     except redis.RedisError as e:
         logger.error(f"Redis Error: {e}")
 
-    product = db.query(Product).filter(
-        Product.id == product_id
-    ).first()
+    product = product_repository.get_product_by_id(
+        db,
+        product_id
+    )
 
     if not product:
         raise HTTPException(
@@ -129,24 +132,21 @@ def update_product(
     product_id: int,
     product_data: ProductCreate
 ):
-    product = db.query(Product).filter(
-        Product.id == product_id
-    ).first()
-
+    product = product_repository.get_product_by_id(
+        db,
+        product_id
+    )
     if not product:
         raise HTTPException(
             status_code=404,
             detail="Product not found"
         )
 
-    product.name = product_data.name
-    product.description = product_data.description
-    product.price = product_data.price
-    product.stock = product_data.stock
-    product.category_id = product_data.category_id
-
-    db.commit()
-    db.refresh(product)
+    product = product_repository.update_product(
+        db,
+        product,
+        product_data
+    )
 
     try:
         redis_client.delete(PRODUCTS_CACHE_KEY)
@@ -163,9 +163,10 @@ def delete_product(
     db: Session,
     product_id: int
 ):
-    product = db.query(Product).filter(
-        Product.id == product_id
-    ).first()
+    product = product_repository.get_product_by_id(
+        db,
+        product_id
+    )
 
     if not product:
         raise HTTPException(
@@ -175,8 +176,10 @@ def delete_product(
 
     product_id_to_delete = product.id
 
-    db.delete(product)
-    db.commit()
+    product_repository.delete_product(
+        db,
+        product
+    )
 
     try:
         redis_client.delete(PRODUCTS_CACHE_KEY)

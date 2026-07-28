@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.models.user import User
 from app.schema.user import UserCreate
 from app.auth.jwt_handler import create_access_token
+from app.repositories import user_repository
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -17,10 +18,9 @@ def signup(
     db: Session,
     user: UserCreate
 ):
-    existing_user = (
-        db.query(User)
-        .filter(User.email == user.email)
-        .first()
+    existing_user = user_repository.get_user_by_email(
+        db,
+        user.email
     )
 
     if existing_user:
@@ -39,9 +39,10 @@ def signup(
         password_hash=hashed_password
     )
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    new_user = user_repository.create_user(
+        db,
+        new_user
+    )
 
     return {
         "message": "User created successfully",
@@ -53,10 +54,9 @@ def login(
     db: Session,
     form_data: OAuth2PasswordRequestForm
 ):
-    db_user = (
-        db.query(User)
-        .filter(User.email == form_data.username)
-        .first()
+    db_user = user_repository.get_user_by_email(
+        db,
+        form_data.username
     )
 
     if not db_user:

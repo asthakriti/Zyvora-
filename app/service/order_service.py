@@ -5,7 +5,8 @@ from app.models.order import Order
 from app.models.cartItem import OrderItem
 from app.models.cart import Cart
 from app.models.user import User
-from app.kafka.producer import publish_order_created
+# from app.kafka.producer import publish_order_created
+from app.repositories import order_repository
 
 
 def place_order(
@@ -13,10 +14,9 @@ def place_order(
     current_user: User
 ):
     try:
-        cart = (
-            db.query(Cart)
-            .filter(Cart.user_id == current_user.id)
-            .first()
+        cart = order_repository.get_cart_by_user_id(
+            db,
+            current_user.id
         )
 
         if not cart:
@@ -50,8 +50,10 @@ def place_order(
             total_amount=total_amount
         )
 
-        db.add(order)
-        db.flush()
+        order = order_repository.create_order(
+            db,
+            order
+        )
 
         for item in cart.items:
 
@@ -62,27 +64,37 @@ def place_order(
                 price_at_purchase=item.product.price
             )
 
-            db.add(order_item)
+            order_repository.create_order_item(
+                db,
+                order_item
+            )
 
             item.product.stock -= item.quantity
 
         for item in cart.items:
-            db.delete(item)
+            order_repository.delete_cart_item(
+                db,
+                item
+            )
 
-        db.commit()
-        db.refresh(order)
+        order_repository.commit_transaction(db)
+
+        order = order_repository.refresh_order(
+            db,
+            order
+        )
 
 
     except Exception:
-        db.rollback()
+        order_repository.rollback_transaction(db)
         raise
 
     # Database transaction is finished here
 
-    publish_order_created(
-        order_id=order.id,
-        user_id=order.user_id
-    )
+    # publish_order_created(
+    #     order_id=order.id,
+    #     user_id=order.user_id
+    # )
 
     return order
 
@@ -91,10 +103,9 @@ def get_my_orders(
     db: Session,
     current_user: User
 ):
-    return (
-        db.query(Order)
-        .filter(Order.user_id == current_user.id)
-        .all()
+    return order_repository.get_orders_by_user_id(
+        db,
+        current_user.id
     )
 
 
@@ -103,13 +114,10 @@ def get_order(
     current_user: User,
     order_id: int
 ):
-    order = (
-        db.query(Order)
-        .filter(
-            Order.id == order_id,
-            Order.user_id == current_user.id
-        )
-        .first()
+    order = order_repository.get_order_by_id(
+        db,
+        current_user.id,
+        order_id
     )
 
     if not order:
@@ -126,13 +134,10 @@ def cancel_order(
     current_user: User,
     order_id: int
 ):
-    order = (
-        db.query(Order)
-        .filter(
-            Order.id == order_id,
-            Order.user_id == current_user.id
-        )
-        .first()
+    order = order_repository.get_order_by_id(
+        db,
+        current_user.id,
+        order_id
     )
 
     if not order:
@@ -153,11 +158,15 @@ def cancel_order(
 
         order.status = "Cancelled"
 
-        db.commit()
-        db.refresh(order)
+        order_repository.commit_transaction(db)
+
+        order = order_repository.refresh_order(
+            db,
+            order
+        )
 
         return order
 
     except Exception:
-        db.rollback()
+        order_repository.rollback_transaction(db)
         raise
