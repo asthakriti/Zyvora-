@@ -5,7 +5,6 @@ from app.models.order import Order
 from app.models.cartItem import OrderItem
 from app.models.cart import Cart
 from app.models.user import User
-# from app.kafka.producer import publish_order_created
 from app.repositories import order_repository
 
 
@@ -120,11 +119,6 @@ def place_order(
         raise
 
     # Database transaction is finished here
-
-    # publish_order_created(
-    #     order_id=order.id,
-    #     user_id=order.user_id
-    # )
 
     return order
 

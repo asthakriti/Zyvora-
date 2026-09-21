@@ -54,10 +54,10 @@ def get_products(db: Session):
         cached_products = redis_client.get(PRODUCTS_CACHE_KEY)
 
         if cached_products:
-            print("========== CACHE HIT ==========")
+            logger.debug("Cache hit: %s", PRODUCTS_CACHE_KEY)
             return json.loads(cached_products)
 
-        print("========== CACHE MISS ==========")
+        logger.debug("Cache miss: %s", PRODUCTS_CACHE_KEY)
 
     except redis.RedisError as e:
         logger.error(f"Redis Error: {e}")
@@ -94,10 +94,10 @@ def get_product(
         cached_product = redis_client.get(cache_key)
 
         if cached_product:
-            print("========== PRODUCT CACHE HIT ==========")
+            logger.debug("Cache hit: %s", cache_key)
             return json.loads(cached_product)
 
-        print("========== PRODUCT CACHE MISS ==========")
+        logger.debug("Cache miss: %s", cache_key)
 
     except redis.RedisError as e:
         logger.error(f"Redis Error: {e}")

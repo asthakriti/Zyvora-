@@ -1,6 +1,6 @@
 # 🚀 Zyvora — Scalable E-Commerce Backend
 
-A production-style RESTful E-Commerce Backend built using **FastAPI**, **PostgreSQL**, **Redis**, and **Docker**. The project follows a layered architecture and is designed with scalability in mind. It implements core backend engineering concepts such as authentication, authorization, database normalization, caching, pagination, and containerization.
+A production-style RESTful E-Commerce Backend built using **FastAPI**, **PostgreSQL**, **Redis**, and **Docker**. The project follows a layered architecture and is designed with scalability in mind. It implements core backend engineering concepts such as authentication, authorization, database normalization, caching, safe concurrent ordering, and containerization.
 
 ---
 
@@ -49,6 +49,7 @@ A production-style RESTful E-Commerce Backend built using **FastAPI**, **Postgre
 
 - Place Order
 - Cancel Order
+- Safe concurrent ordering: stock is checked and reduced in one atomic SQL update, so two customers can never buy the last unit
 
 ---
 
@@ -226,7 +227,6 @@ PATCH   /orders/{id}/cancel
 # 🚀 Future Enhancements
 
 - Microservices Architecture
-- Apache Kafka
 - Event-Driven Communication
 - API Gateway
 
