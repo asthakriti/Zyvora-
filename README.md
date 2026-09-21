@@ -14,6 +14,7 @@ A production-style RESTful E-Commerce Backend built using **FastAPI**, **Postgre
 - Password Hashing
 - Role-Based Access Control (Admin & Customer)
 - Protected Routes
+- User Profile
 
 ---
 
@@ -33,6 +34,7 @@ A production-style RESTful E-Commerce Backend built using **FastAPI**, **Postgre
 - Update Category
 - Delete Category
 - View Categories
+- View Products in a Category
 
 ---
 
@@ -42,12 +44,14 @@ A production-style RESTful E-Commerce Backend built using **FastAPI**, **Postgre
 - View Cart
 - Update Product Quantity
 - Remove Product from Cart
+- Clear Cart
 
 ---
 
 ## 📋 Order Management
 
 - Place Order
+- View Orders
 - Cancel Order
 - Safe concurrent ordering: stock is checked and reduced in one atomic SQL update, so two customers can never buy the last unit
 
@@ -61,6 +65,12 @@ Implemented Redis Cache for:
 - Product Details
 
 Cache-Aside Pattern is used to reduce database load and improve response time.
+
+---
+
+## 🚦 Rate Limiting
+
+Redis-based rate limiting per client IP (1000 requests per 60 seconds).
 
 ---
 
@@ -120,8 +130,17 @@ The application follows a normalized relational database design.
 ## Authentication
 
 ```
-POST   /signup
-POST   /login
+POST    /signup
+POST    /login
+GET     /profile
+```
+
+---
+
+## Admin
+
+```
+GET     /admin/dashboard
 ```
 
 ---
@@ -132,17 +151,21 @@ POST   /login
 POST    /products
 GET     /products
 GET     /products/{id}
-PATCH   /products/{id}
+PUT     /products/{id}
 DELETE  /products/{id}
 ```
+
+---
 
 ## Categories
 
 ```
 POST    /categories
 GET     /categories
-PATCH   /categories/{id}
+GET     /categories/{id}
+PUT     /categories/{id}
 DELETE  /categories/{id}
+GET     /categories/{id}/products
 ```
 
 ---
@@ -150,10 +173,11 @@ DELETE  /categories/{id}
 ## Cart
 
 ```
-POST    /cart/items
+POST    /cart/add
 GET     /cart
-PATCH   /cart/items/{id}
-DELETE  /cart/items/{id}
+PUT     /cart/item/{id}
+DELETE  /cart/item/{id}
+DELETE  /cart/clear
 ```
 
 ---
@@ -200,10 +224,6 @@ PATCH   /orders/{id}/cancel
 - Docker
 - Docker Compose
 
-### Testing
-
-- Pytest
-
 ---
 
 # 📚 Backend Concepts Implemented
@@ -220,6 +240,8 @@ PATCH   /orders/{id}/cancel
 - HTTP Status Codes
 - Error Handling
 - Redis Cache (Cache-Aside Pattern)
+- Rate Limiting
+- Atomic Stock Updates for Concurrent Orders
 - Docker Containerization
 
 ---
