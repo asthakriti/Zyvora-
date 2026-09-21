@@ -29,10 +29,11 @@ def add_to_cart(
         current_user.id
     )
 
-    cart = cart_repository.create_cart(
-        db,
-        cart
-    )
+    if not cart:
+        cart = cart_repository.create_cart(
+            db,
+            Cart(user_id=current_user.id)
+        )
 
     cart_item = cart_repository.get_cart_item(
         db,
