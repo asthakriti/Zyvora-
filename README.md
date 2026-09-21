@@ -54,6 +54,7 @@ A production-style RESTful E-Commerce Backend built using **FastAPI**, **Postgre
 - View Orders
 - Cancel Order
 - Safe concurrent ordering: stock is checked and reduced in one atomic SQL update, so two customers can never buy the last unit
+- Exact money: prices and totals are stored as `NUMERIC(10, 2)` and calculated with Python `Decimal`, never `float`. The API returns money as a string, e.g. `"19.99"`
 
 ---
 
@@ -85,6 +86,24 @@ Services include:
 - Redis
 
 Managed using Docker Compose.
+
+```bash
+docker compose up --build
+```
+
+---
+
+## 🗃️ Database Migrations
+
+The database schema is managed with **Alembic** (`alembic/versions/`). The app never creates tables by itself.
+
+- When the app container starts, it runs `alembic upgrade head` first, then starts the server. A new or old database is always brought up to date automatically.
+- After changing a model, create a migration, **read it**, then apply it:
+
+```bash
+docker compose exec app alembic revision --autogenerate -m "describe the change"
+docker compose exec app alembic upgrade head
+```
 
 ---
 
@@ -204,6 +223,7 @@ PATCH   /orders/{id}/cancel
 
 - PostgreSQL
 - SQLAlchemy
+- Alembic (migrations)
 
 ### Authentication
 
@@ -242,6 +262,8 @@ PATCH   /orders/{id}/cancel
 - Redis Cache (Cache-Aside Pattern)
 - Rate Limiting
 - Atomic Stock Updates for Concurrent Orders
+- Database Migrations (Alembic)
+- Exact Decimal Money Handling
 - Docker Containerization
 
 ---
