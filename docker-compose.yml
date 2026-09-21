@@ -7,6 +7,11 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce_backend"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 
   app:
     build: .
@@ -14,13 +19,16 @@ services:
     ports:
       - "9000:9000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ecommerce_backend
     volumes:
       - .:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload
+    # Apply database migrations first, then start the server.
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload"
 
   redis:
     image: redis:7-alpine

@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 
-from app.database.connection import engine
-from app.database.base import Base
 import logging
 import app.models.user
 
@@ -25,7 +23,7 @@ app = FastAPI()
 
 app.middleware("http")(rate_limit)
 
-Base.metadata.create_all(bind=engine)
+# Tables are created and changed only by Alembic migrations (alembic/versions).
 
 app.include_router(auth_router)
 app.include_router(admin_router)
