@@ -31,10 +31,22 @@ def place_order(
                 detail="Cart is empty."
             )
 
+        # Always touch products in the same order (ascending product_id).
+        # Every UPDATE takes a row lock that is held until COMMIT, so two
+        # concurrent orders touching the same products in opposite orders
+        # would deadlock. A deterministic order makes that impossible.
+        items = sorted(
+            cart.items,
+            key=lambda item: item.product_id
+        )
+
         total_amount = 0
 
-        for item in cart.items:
+        for item in items:
 
+            # Fast, friendly pre-check. This is NOT the concurrency guard --
+            # it only exists so the common "clearly out of stock" case fails
+            # early with a readable message before we write anything.
             if item.product.stock < item.quantity:
                 raise HTTPException(
                     status_code=400,
@@ -55,7 +67,27 @@ def place_order(
             order
         )
 
-        for item in cart.items:
+        for item in items:
+
+            # AUTHORITATIVE GUARD.
+            # Atomic conditional UPDATE: the stock check and the decrement
+            # happen in a single SQL statement, so two concurrent orders
+            # cannot both sell the last unit. rows == 0 means someone else
+            # committed first between our pre-check and this write.
+            rows = order_repository.decrement_stock(
+                db,
+                item.product_id,
+                item.quantity
+            )
+
+            if rows == 0:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"'{item.product.name}' just went out of stock. "
+                        "Please try again."
+                    )
+                )
 
             order_item = OrderItem(
                 order_id=order.id,
@@ -69,9 +101,7 @@ def place_order(
                 order_item
             )
 
-            item.product.stock -= item.quantity
-
-        for item in cart.items:
+        for item in items:
             order_repository.delete_cart_item(
                 db,
                 item
@@ -153,8 +183,18 @@ def cancel_order(
         )
 
     try:
-        for item in order.order_items:
-            item.product.stock += item.quantity
+        # Restocking is also a read-modify-write, so use the same atomic
+        # statement (negative quantity = give stock back). Sorted for the
+        # same deadlock reason as place_order.
+        for item in sorted(
+            order.order_items,
+            key=lambda item: item.product_id
+        ):
+            order_repository.decrement_stock(
+                db,
+                item.product_id,
+                -item.quantity
+            )
 
         order.status = "Cancelled"
 
