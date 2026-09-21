@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserCreate(BaseModel):
@@ -6,6 +6,16 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-class UserLogin(BaseModel):
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
     email: EmailStr
-    password: str
+    role: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

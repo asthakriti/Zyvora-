@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.auth.roles import admin_required
+from app.core.dependencies import require_admin
 
 router = APIRouter(
     prefix="/admin",
@@ -10,7 +10,7 @@ router = APIRouter(
 
 @router.get("/dashboard")
 def dashboard(
-    current_user=Depends(admin_required)
+    current_user=Depends(require_admin)
 ):
     return {
         "message": "Welcome Admin",

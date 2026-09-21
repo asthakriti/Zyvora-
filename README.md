@@ -130,9 +130,9 @@ The application follows a normalized relational database design.
 ## Authentication
 
 ```
-POST    /signup
-POST    /login
-GET     /profile
+POST    /auth/signup
+POST    /auth/login
+GET     /auth/profile
 ```
 
 ---

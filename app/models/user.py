@@ -1,9 +1,15 @@
+from enum import Enum
+
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 
 from app.database.base import Base
 from sqlalchemy.orm import relationship
 
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    CUSTOMER = "customer"
 
 
 class User(Base):
@@ -18,7 +24,7 @@ class User(Base):
 
     password_hash = Column(String, nullable=False)
 
-    role = Column(String(20), default="customer")
+    role = Column(String(20), default=UserRole.CUSTOMER.value)
 
     created_at = Column(DateTime, server_default=func.now())
 

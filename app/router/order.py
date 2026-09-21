@@ -7,7 +7,7 @@ from app.models.user import User
 
 from app.schema.order import OrderResponse
 
-from app.auth.dependencies import get_current_user
+from app.core.dependencies import get_current_user
 
 from app.service import order_service
 

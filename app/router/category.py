@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.schema.category import CategoryCreate, CategoryResponse
-from app.auth.roles import admin_required
+from app.core.dependencies import require_admin
 from app.service import category_service
 
 router = APIRouter(
@@ -16,7 +16,7 @@ router = APIRouter(
 def create_category(
     category: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(admin_required)
+    current_user=Depends(require_admin)
 ):
     return category_service.create_category(
         db=db,
@@ -47,7 +47,7 @@ def update_category(
     category_id: int,
     category_data: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(admin_required)
+    current_user=Depends(require_admin)
 ):
     return category_service.update_category(
         db=db,
@@ -60,7 +60,7 @@ def update_category(
 def delete_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(admin_required)
+    current_user=Depends(require_admin)
 ):
     return category_service.delete_category(
         db=db,
