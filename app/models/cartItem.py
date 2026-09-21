@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy import Column, Integer, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.database.base import Base
@@ -13,7 +13,7 @@ class OrderItem(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
 
     quantity = Column(Integer, nullable=False)
-    price_at_purchase = Column(Float, nullable=False)
+    price_at_purchase = Column(Numeric(10, 2), nullable=False)
 
     order = relationship(
         "Order",

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey
 from datetime import datetime
 from sqlalchemy.orm import relationship
 
@@ -13,7 +13,7 @@ class Product(Base):
 
     description = Column(String, nullable=True)
 
-    price = Column(Float, nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
 
     stock = Column(Integer, nullable=False)
 

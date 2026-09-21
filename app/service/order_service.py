@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -39,7 +41,7 @@ def place_order(
             key=lambda item: item.product_id
         )
 
-        total_amount = 0
+        total_amount = Decimal("0")
 
         for item in items:
 

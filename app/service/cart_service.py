@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -73,7 +75,7 @@ def view_cart(
 
     items = []
 
-    total = 0
+    total = Decimal("0")
 
     for item in cart.items:
 
@@ -85,15 +87,16 @@ def view_cart(
             "cart_item_id": item.id,
             "product_id": item.product.id,
             "product_name": item.product.name,
-            "price": item.product.price,
+            # Money is sent as a string ("19.99"), same as the product API.
+            "price": str(item.product.price),
             "quantity": item.quantity,
-            "subtotal": subtotal
+            "subtotal": str(subtotal)
         })
 
     return {
         "cart_id": cart.id,
         "items": items,
-        "total": total
+        "total": str(total)
     }
 
 def update_quantity(

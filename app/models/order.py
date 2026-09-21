@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Numeric, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -17,7 +17,7 @@ class Order(Base):
     )
 
     total_amount = Column(
-        Float,
+        Numeric(10, 2),
         nullable=False
     )
 
